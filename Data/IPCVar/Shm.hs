@@ -7,7 +7,6 @@ import Control.Exception
 import Data.Binary
 import Data.ByteString.Lazy.Char8 as BS
 import Data.IPCVar.Backend
-import qualified Data.IPCVar.File as File
 import Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding
 import Data.UUID.V4
@@ -20,15 +19,15 @@ shmIPCBackend name = IPCVarBackend
     { readValue  = bracket
         (shmOpen name (ShmOpenFlags False False False False) ownerModes)
         closeFd
-        File.decodeFd
+        decodeFd
     , writeValue = \x -> bracket
         (shmOpen name (ShmOpenFlags True True False False) ownerModes)
         closeFd
-        (flip File.encodeFd x)
+        (flip encodeFd x)
     , swapValue  = \x -> bracket
         (shmOpen name (ShmOpenFlags True False False False) ownerModes)
         closeFd
-        (\fd -> File.decodeFd fd <* File.encodeFd fd x)
+        (\fd -> decodeFd fd <* encodeFd fd x)
     , deleteValue = shmUnlink name
     , encodeState = encodeUtf8 (T.pack name)
     }

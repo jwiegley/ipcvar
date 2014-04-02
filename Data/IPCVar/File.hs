@@ -1,12 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.IPCVar.File where
+module Data.IPCVar.File (newIPCVar) where
 
 import Control.Applicative
 import Control.Exception
-import Control.Monad
 import Data.Binary
-import Data.ByteString.Lazy.Char8 as BS
 import Data.IPCVar.Backend
 import Data.Text.Lazy as T
 import Data.Text.Lazy.Encoding
@@ -25,16 +23,6 @@ withLock path mode req f = do
         (waitToSetLock fd (req, AbsoluteSeek, 0, 0) >> f fd)
             `finally` waitToSetLock fd (Unlock, AbsoluteSeek, 0, 0)
 
-encodeFd :: Binary a => Fd -> a -> IO ()
-encodeFd fd x = void $ fdWrite fd (BS.unpack (encode x))
-
-decodeFd :: Binary a => Fd -> IO a
-decodeFd fd = do
-    sz <- fdSeek fd SeekFromEnd 0 -- seek to the end to get the size
-    _ <- fdSeek fd AbsoluteSeek 0
-    (bs, sz') <- fdRead fd (fromIntegral sz)
-    assert (sz == fromIntegral sz') $ return $ decode (BS.pack bs)
-
 fileIPCBackend :: Binary a => FilePath -> IPCVarBackend a
 fileIPCBackend path = IPCVarBackend
     { readValue  = withLock path ReadOnly ReadLock decodeFd
@@ -45,8 +33,8 @@ fileIPCBackend path = IPCVarBackend
     , encodeState = encodeUtf8 (T.pack path)
     }
 
-decodeState :: Binary a => ByteString -> IPCVarBackend a
-decodeState = fileIPCBackend . T.unpack . decodeUtf8
+-- decodeState :: Binary a => ByteString -> IPCVarBackend a
+-- decodeState = fileIPCBackend . T.unpack . decodeUtf8
 
 -- instance Binary a => Binary (IPCVar a) where
 --     put (IPCVar b) = put (encodeState b)
