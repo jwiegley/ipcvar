@@ -13,4 +13,6 @@ data IPCVarBackend a = Binary a => IPCVarBackend
     , encodeState :: ByteString
     }
 
-newtype IPCVar a = IPCVar { getIPCBackend :: IPCVarBackend a }
+newtype IPCVar a = IPCVar { getIPCVarBackend :: IPCVarBackend a }
+
+-- newtype IPCMVar a = IPCMVar { getIPCMVarBackend :: IPCVarBackend a }

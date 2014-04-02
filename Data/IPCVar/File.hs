@@ -48,9 +48,9 @@ fileIPCBackend path = IPCVarBackend
 decodeState :: Binary a => ByteString -> IPCVarBackend a
 decodeState = fileIPCBackend . T.unpack . decodeUtf8
 
-instance Binary a => Binary (IPCVar a) where
-    put (IPCVar b) = put (encodeState b)
-    get = IPCVar . decodeState <$> get
+-- instance Binary a => Binary (IPCVar a) where
+--     put (IPCVar b) = put (encodeState b)
+--     get = IPCVar . decodeState <$> get
 
 newIPCVar :: Binary a => a -> IO (IPCVar a)
 newIPCVar x = do
@@ -61,5 +61,5 @@ newIPCVar x = do
     go path h = do
         hClose h
         let var = IPCVar (fileIPCBackend path)
-        writeValue (getIPCBackend var) x
+        writeValue (getIPCVarBackend var) x
         return var
