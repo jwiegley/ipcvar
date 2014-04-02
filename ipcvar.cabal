@@ -7,11 +7,11 @@ Author:              John Wiegley
 Maintainer:          johnw@newartisans.com
 Build-Type:          Simple
 Cabal-Version:       >=1.10
-Category:            FFI
+Category:            System
 Description:
-  @ipcvar@ is ...
-  .
-  For further information...
+  IPCVars allows you to communicate values between forked processes (with
+  'forkProcess').  There are several backends possible, with the first
+  available being simple files using POSIX file locking.
 
 Source-repository head
   type: git
