@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.IPCVar.Shm where
@@ -18,16 +19,13 @@ shmIPCBackend :: Binary a => String -> IPCVarBackend a
 shmIPCBackend name = IPCVarBackend
     { readValue  = bracket
         (shmOpen name (ShmOpenFlags False False False False) ownerModes)
-        closeFd
-        decodeFd
-    , writeValue = \x -> bracket
+        closeFd decodeFd
+    , writeValue = bracket
         (shmOpen name (ShmOpenFlags True True False False) ownerModes)
-        closeFd
-        (flip encodeFd x)
+        closeFd . flip encodeFd
     , swapValue  = \x -> bracket
         (shmOpen name (ShmOpenFlags True False False False) ownerModes)
-        closeFd
-        (\fd -> decodeFd fd <* encodeFd fd x)
+        closeFd (\fd -> decodeFd fd <* encodeFd fd x)
     , deleteValue = shmUnlink name
     , encodeState = encodeUtf8 (T.pack name)
     }
@@ -43,6 +41,7 @@ newIPCVar :: Binary a => a -> IO (IPCVar a)
 newIPCVar x = do
     uuid <- nextRandom
     -- Mac OS X limits this to PSHMNAMLEN, which is 31 on Mountain Lion.
-    let var = IPCVar (shmIPCBackend (Prelude.take 30 (show uuid)))
+    let name = Prelude.take 30 (show uuid)
+        var = IPCVar (shmIPCBackend name)
     writeValue (getIPCVarBackend var) x
     return var

@@ -20,16 +20,9 @@ main = hspec $ do
 
     describe "shm backend" $
         it "reads and writes values" $ do
-            Prelude.putStrLn $ "shm main.hs:23.."
             var <- Shm.newIPCVar (10 :: Int)
-            Prelude.putStrLn $ "shm main.hs:25.."
             _ <- forkProcess $ writeIPCVar var 20
-            Prelude.putStrLn $ "shm main.hs:27.."
             threadDelay 2000000
-            Prelude.putStrLn $ "shm main.hs:29.."
             x <- readIPCVar var
-            Prelude.putStrLn $ "shm main.hs:31.."
             x `shouldBe` 20
-            Prelude.putStrLn $ "shm main.hs:33.."
             deleteIPCVar var
-            Prelude.putStrLn $ "shm main.hs:35.."

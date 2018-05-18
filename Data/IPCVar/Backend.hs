@@ -1,12 +1,13 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Data.IPCVar.Backend where
 
 import Control.Exception
-import Control.Monad
 import Data.Binary
 import Data.ByteString.Lazy
-import Data.ByteString.Lazy.Char8 as BS
+import Data.Text.Lazy as Text
+import Data.Text.Lazy.Encoding as Text
 import System.IO hiding (hGetContents)
 import System.Posix.IO
 import System.Posix.Types
@@ -24,11 +25,14 @@ newtype IPCVar a = IPCVar { getIPCVarBackend :: IPCVarBackend a }
 -- newtype IPCMVar a = IPCMVar { getIPCMVarBackend :: IPCVarBackend a }
 
 encodeFd :: Binary a => Fd -> a -> IO ()
-encodeFd fd x = void $ fdWrite fd (BS.unpack (encode x))
+encodeFd fd x = do
+    !_ <- fdWrite fd (Text.unpack (Text.decodeUtf8 (encode x)))
+    return ()
 
 decodeFd :: Binary a => Fd -> IO a
 decodeFd fd = do
     sz <- fdSeek fd SeekFromEnd 0 -- seek to the end to get the size
-    _ <- fdSeek fd AbsoluteSeek 0
-    (bs, sz') <- fdRead fd (fromIntegral sz)
-    assert (sz == fromIntegral sz') $ return $ decode (BS.pack bs)
+    !_ <- fdSeek fd AbsoluteSeek 0
+    (!bs, !sz') <- fdRead fd (fromIntegral sz)
+    assert (sz == fromIntegral sz') $
+        return $ decode (Text.encodeUtf8 (Text.pack bs))
