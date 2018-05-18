@@ -1,5 +1,5 @@
 Name:                ipcvar
-Version:             0.1.0
+Version:             0.1.1
 Synopsis:            Simple inter-process communication through IPCVars.
 License-file:        LICENSE
 License:             MIT
